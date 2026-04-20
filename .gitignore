@@ -1,0 +1,21 @@
+# Excel temp files
+~$*.xlsx
+~$*.xlsm
+
+# Partial/test artifacts
+SparePartsInventory_partial.xlsm
+frmSample.frm
+frmSample.frx
+frmTest.frm
+frmTest.frx
+frmTest.log
+frmTest2.frm
+test_frm.py
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
