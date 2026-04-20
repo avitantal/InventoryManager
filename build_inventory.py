@@ -316,7 +316,7 @@ Public Sub StockOut(itemID As String, qty As Long, reason As String, _
     Dim minQ As Long: If rm > 0 Then minQ = SafeLng(loM.DataBodyRange(rm,loM.ListColumns("Min_Qty").Index).Value)
     Dim nm As String: nm = SafeStr(GetItemFld(itemID,"Item_Name_HE"))
     If newQ = 0 And SafeStr(GetItemFld(itemID,"Is_Critical")) = "Yes" Then
-        MsgBox "אזהרה! פריט קריטי הגיע לאפס:" & vbCrLf & nm & vbCrLf & "יש לפתוח הזמנה דחופה!",vbCritical,"חוסר קריטי"
+        MsgBox "אזהרה! פריט קריטי (שבר, משבית מערכת) הגיע לאפס:" & vbCrLf & nm & vbCrLf & "יש לפתוח הזמנה דחופה!",vbCritical,"חוסר קריטי"
     ElseIf newQ < minQ Then
         MsgBox "שים לב: " & nm & " ירד מתחת למינימום (" & newQ & " < " & minQ & ")",vbExclamation,"אזהרת מלאי"
     End If
@@ -368,9 +368,9 @@ End Sub
 Private Sub WriteAlerts()
     Dim wD As Worksheet: Set wD = ThisWorkbook.Sheets("Dashboard")
     Dim lo As ListObject: Set lo = ThisWorkbook.Sheets("Inventory").ListObjects("tbl_Inventory")
-    Dim SR As Long: SR = 22
-    wD.Range(wD.Cells(SR,2),wD.Cells(SR+20,7)).ClearContents
-    wD.Range(wD.Cells(SR,2),wD.Cells(SR+20,7)).Interior.ColorIndex = xlNone
+    Dim SR As Long: SR = 17
+    wD.Range(wD.Cells(SR,2),wD.Cells(SR+6,7)).ClearContents
+    wD.Range(wD.Cells(SR,2),wD.Cells(SR+6,7)).Interior.ColorIndex = xlNone
     If lo.DataBodyRange Is Nothing Then Exit Sub
     Dim out As Long: out = SR
     Dim i As Long
@@ -382,7 +382,7 @@ Private Sub WriteAlerts()
             wD.Cells(out,5).Value = lo.DataBodyRange(i,lo.ListColumns("Qty_On_Hand").Index).Value
             wD.Cells(out,6).Value = lo.DataBodyRange(i,lo.ListColumns("Min_Qty").Index).Value
             wD.Range(wD.Cells(out,2),wD.Cells(out,6)).Interior.Color = RGB(255,180,180)
-            out = out+1: If out > SR+20 Then Exit For
+            out = out+1: If out > SR+6 Then Exit For
         End If
     Next i
 End Sub
@@ -390,9 +390,9 @@ End Sub
 Private Sub WriteShortage()
     Dim wD As Worksheet: Set wD = ThisWorkbook.Sheets("Dashboard")
     Dim lo As ListObject: Set lo = ThisWorkbook.Sheets("Inventory").ListObjects("tbl_Inventory")
-    Dim SR As Long: SR = 46
-    wD.Range(wD.Cells(SR,2),wD.Cells(SR+30,7)).ClearContents
-    wD.Range(wD.Cells(SR,2),wD.Cells(SR+30,7)).Interior.ColorIndex = xlNone
+    Dim SR As Long: SR = 26
+    wD.Range(wD.Cells(SR,2),wD.Cells(SR+8,7)).ClearContents
+    wD.Range(wD.Cells(SR,2),wD.Cells(SR+8,7)).Interior.ColorIndex = xlNone
     If lo.DataBodyRange Is Nothing Then Exit Sub
     Dim out As Long: out = SR
     Dim i As Long
@@ -405,7 +405,7 @@ Private Sub WriteShortage()
             wD.Cells(out,6).Value = lo.DataBodyRange(i,lo.ListColumns("Is_Critical").Index).Value
             Dim al As String: al = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Alert_Level").Index).Value)
             wD.Range(wD.Cells(out,2),wD.Cells(out,6)).Interior.Color = IIf(al="RED_ALERT",RGB(255,180,180),RGB(255,235,180))
-            out = out+1: If out > SR+30 Then Exit For
+            out = out+1: If out > SR+8 Then Exit For
         End If
     Next i
 End Sub
@@ -413,11 +413,11 @@ End Sub
 Private Sub WriteRecentTxns()
     Dim wD As Worksheet: Set wD = ThisWorkbook.Sheets("Dashboard")
     Dim lo As ListObject: Set lo = ThisWorkbook.Sheets("Transactions").ListObjects("tbl_Transactions")
-    Dim SR As Long: SR = 80
-    wD.Range(wD.Cells(SR,2),wD.Cells(SR+20,9)).ClearContents
+    Dim SR As Long: SR = 37
+    wD.Range(wD.Cells(SR,2),wD.Cells(SR+9,9)).ClearContents
     If lo.DataBodyRange Is Nothing Then Exit Sub
     Dim total As Long: total = lo.ListRows.Count
-    Dim st As Long: st = IIf(total>20,total-19,1)
+    Dim st As Long: st = IIf(total>10,total-9,1)
     Dim out As Long: out = SR
     Dim i As Long
     For i = total To st Step -1
@@ -429,7 +429,7 @@ Private Sub WriteRecentTxns()
         wD.Cells(out,7).Value = lo.DataBodyRange(i,lo.ListColumns("Qty_Change").Index).Value
         wD.Cells(out,8).Value = lo.DataBodyRange(i,lo.ListColumns("Technician").Index).Value
         wD.Cells(out,9).Value = lo.DataBodyRange(i,lo.ListColumns("Reason").Index).Value
-        out = out+1: If out > SR+20 Then Exit For
+        out = out+1: If out > SR+9 Then Exit For
     Next i
 End Sub
 
@@ -580,7 +580,6 @@ Public Sub BtnAdjust():   frmAdjust.Show:       End Sub
 Public Sub BtnSearch():   frmSearch.Show:       End Sub
 Public Sub BtnRefresh():  modDashboard.RefreshAll: ShowOK "לוח הבקרה עודכן": End Sub
 Public Sub BtnOrders():   modReports.ExportShortage: End Sub
-Public Sub BtnMigrate():  modMigration.RunMigration: End Sub
 """
 
 VBA_THISWORKBOOK = """\
@@ -595,7 +594,10 @@ End Sub
 # ── UserForm code ────────────────────────────────────────────────────────────
 CODE_FRMMAIN = """\
 Option Explicit
-Private Sub UserForm_Initialize(): Me.Width=310: Me.Height=385: End Sub
+Private Sub UserForm_Initialize()
+    Me.Width=310: Me.Height=385
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+End Sub
 Private Sub cmdAddItem_Click():  Me.Hide: frmAddItem.Show:  Me.Show: End Sub
 Private Sub cmdStockIn_Click():  Me.Hide: frmStockIn.Show:  Me.Show: End Sub
 Private Sub cmdStockOut_Click(): Me.Hide: frmStockOut.Show: Me.Show: End Sub
@@ -612,6 +614,7 @@ Dim selID As String, curQ As Long, minQ As Long, isCrit As Boolean
 
 Private Sub UserForm_Initialize()
     Me.Width=492: Me.Height=520
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
     txtTechnician.Value = Environ("USERNAME")
     lblWarn.Visible = False: lblCrit.Visible = False
     selID = "": curQ = 0: minQ = 0: isCrit = False
@@ -629,7 +632,10 @@ Private Sub txtSearch_Change()
         Dim nH As String: nH = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_Name_HE").Index).Value))
         Dim mf As String: mf = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Manufacturer").Index).Value))
         Dim md As String: md = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Model").Index).Value))
-        If InStr(nH,s)>0 Or InStr(mf,s)>0 Or InStr(md,s)>0 Then
+        Dim pn As String: pn = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Part_Number").Index).Value))
+        Dim ct As String: ct = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Category").Index).Value))
+        Dim iid2 As String: iid2 = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value))
+        If InStr(nH,s)>0 Or InStr(mf,s)>0 Or InStr(md,s)>0 Or InStr(pn,s)>0 Or InStr(ct,s)>0 Or InStr(iid2,s)>0 Then
             Dim iid As String: iid = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value)
             lstRes.AddItem SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_Name_HE").Index).Value)
             lstRes.List(lstRes.ListCount-1,1) = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Manufacturer").Index).Value)
@@ -666,7 +672,7 @@ Private Sub txtQty_Change()
         lblWarn.ForeColor = RGB(200,0,0): lblWarn.Visible = True: cmdSave.Enabled = False: Exit Sub
     End If
     If curQ-q = 0 And isCrit Then
-        lblCrit.Caption = "אזהרה! פריט קריטי יגיע לאפס!"
+        lblCrit.Caption = "אזהרה! פריט קריטי (שבר, משבית מערכת) יגיע לאפס!"
         lblCrit.ForeColor = RGB(200,0,0): lblCrit.Visible = True
     ElseIf curQ-q < minQ Then
         lblWarn.Caption = "מלאי יהיה מתחת למינימום (" & (curQ-q) & " < " & minQ & ")"
@@ -692,7 +698,8 @@ Option Explicit
 Dim selID As String
 
 Private Sub UserForm_Initialize()
-    Me.Width=492: Me.Height=465
+    Me.Width=492: Me.Height=535
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
     txtTechnician.Value = Environ("USERNAME")
     selID = ""
 End Sub
@@ -708,7 +715,11 @@ Private Sub txtSearch_Change()
     For i = 1 To lo.ListRows.Count
         Dim nH As String: nH = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_Name_HE").Index).Value))
         Dim mf As String: mf = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Manufacturer").Index).Value))
-        If InStr(nH,s)>0 Or InStr(mf,s)>0 Then
+        Dim md As String: md = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Model").Index).Value))
+        Dim pn As String: pn = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Part_Number").Index).Value))
+        Dim ct As String: ct = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Category").Index).Value))
+        Dim iid2 As String: iid2 = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value))
+        If InStr(nH,s)>0 Or InStr(mf,s)>0 Or InStr(md,s)>0 Or InStr(pn,s)>0 Or InStr(ct,s)>0 Or InStr(iid2,s)>0 Then
             Dim iid As String: iid = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value)
             lstRes.AddItem SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_Name_HE").Index).Value)
             lstRes.List(lstRes.ListCount-1,1) = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Manufacturer").Index).Value)
@@ -744,6 +755,7 @@ Option Explicit
 
 Private Sub UserForm_Initialize()
     Me.Width=432: Me.Height=556
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
     Dim lo As ListObject
     Dim i As Long
     Set lo = ThisWorkbook.Sheets("Lists").ListObjects("tbl_Categories")
@@ -784,6 +796,7 @@ Private Sub cmdSave_Click()
         IIf(chkCritical.Value,"Yes","No"),0,0,"No","Active", _
         Trim(txtNotes.Value),SafeLng(txtMinQty.Value),0)
     If newID = "" Then Exit Sub
+    modDashboard.RefreshAll
     ShowOK "פריט נוסף: " & newID
     If MsgBox("להוסיף פריט נוסף?",vbYesNo+vbQuestion,"הוספה") = vbYes Then
         txtNameHE.Value="": txtNameEN.Value="": txtModel.Value=""
@@ -803,6 +816,7 @@ Dim selID As String
 
 Private Sub UserForm_Initialize()
     Me.Width=402: Me.Height=326
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
     txtTechnician.Value = Environ("USERNAME")
     selID = ""
 End Sub
@@ -838,7 +852,10 @@ Private Sub cmdCancel_Click(): Unload Me: End Sub
 CODE_FRMSEARCH = """\
 Option Explicit
 
-Private Sub UserForm_Initialize(): Me.Width=652: Me.Height=498: End Sub
+Private Sub UserForm_Initialize()
+    Me.Width=652: Me.Height=498
+    On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+End Sub
 Private Sub cmdSearch_Click()
     lstRes.Clear
     Dim lo As ListObject
@@ -851,7 +868,10 @@ Private Sub cmdSearch_Click()
         Dim mf As String: mf = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Manufacturer").Index).Value))
         Dim md As String: md = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Model").Index).Value))
         Dim ct As String: ct = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Category").Index).Value))
-        If s="" Or InStr(nH,s)>0 Or InStr(mf,s)>0 Or InStr(md,s)>0 Or InStr(ct,s)>0 Then
+        Dim pn As String: pn = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Part_Number").Index).Value))
+        Dim loc As String: loc = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Storage_Location").Index).Value))
+        Dim iid3 As String: iid3 = LCase(SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value))
+        If s="" Or InStr(nH,s)>0 Or InStr(mf,s)>0 Or InStr(md,s)>0 Or InStr(ct,s)>0 Or InStr(pn,s)>0 Or InStr(loc,s)>0 Or InStr(iid3,s)>0 Then
             Dim iid As String: iid = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_ID").Index).Value)
             lstRes.AddItem iid
             lstRes.List(lstRes.ListCount-1,1) = SafeStr(lo.DataBodyRange(i,lo.ListColumns("Item_Name_HE").Index).Value)
@@ -1076,8 +1096,8 @@ def setup_dashboard(wb):
     wsa.Range("G3").NumberFormat = "DD/MM/YYYY HH:MM"
 
     # KPI section
-    wsa.Range("A5:J5").Merge()
-    write("A5","▌ מדדי מפתח (לחץ F9 או 'רענן' לעדכון)",bold=True,size=12,fcolor=rgb(68,114,196))
+    wsa.Range("A5:D5").Merge()
+    write("A5","▌ מדדי מפתח",bold=True,size=12,fcolor=rgb(68,114,196))
 
     kpis = [
         ("A6","B6","סה\"כ פריטים במאגר",    '=COUNTA(tbl_Items[Item_ID])'),
@@ -1101,44 +1121,35 @@ def setup_dashboard(wb):
     wsa.Columns("B").ColumnWidth = 18
 
     # Action buttons column E
-    btn_defs = [
-        ("E6",  "פתח תפריט ראשי",  "OpenMenu"),
-        ("E7",  "הוספת פריט חדש",   "BtnAddItem"),
-        ("E8",  "קבלת מלאי (IN)",   "BtnStockIn"),
-        ("E9",  "הוצאת מלאי (OUT)", "BtnStockOut"),
-        ("E10", "תיקון מלאי",        "BtnAdjust"),
-        ("E11", "חיפוש פריט",        "BtnSearch"),
-        ("E12", "דוח חוסרים",        "BtnOrders"),
-        ("E13", "ייבוא ממהדורה 1",   "BtnMigrate"),
-    ]
-    for cell_addr, caption, macro in btn_defs:
-        r = wsa.Range(cell_addr)
-        btn = wsa.Buttons().Add(r.Left+2, r.Top+2, r.Width-4, r.Height-4)
-        btn.Caption = caption
-        btn.OnAction = macro
-        btn.Font.Size = 10
+    # Single prominent "פתח" button spanning E6:H13
+    r = wsa.Range("E6:H13")
+    btn = wsa.Buttons().Add(r.Left + 4, r.Top + 4, r.Width - 8, r.Height - 8)
+    btn.Caption = "פתח"
+    btn.OnAction = "OpenMenu"
+    btn.Font.Size = 18
+    btn.Font.Bold = True
 
-    # Section headers
-    wsa.Range("A20:J20").Merge()
-    write("A20","▌ פריטים קריטיים בחסר",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(192,0,0))
-    wsa.Range("B21:G21").Value = [["מזהה פריט","שם פריט","יצרן","מלאי","מינימום",""]]
-    wsa.Range("B21:G21").Font.Bold = True
-    wsa.Range("B21:G21").Interior.Color = rgb(192,0,0)
-    wsa.Range("B21:G21").Font.Color = rgb(255,255,255)
+    # Section headers - compact layout (fits one screen)
+    wsa.Range("A15:J15").Merge()
+    write("A15","▌ פריטים קריטיים בחסר (שבר, משבית מערכת)",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(192,0,0))
+    wsa.Range("B16:G16").Value = [["מזהה פריט","שם פריט","יצרן","מלאי","מינימום",""]]
+    wsa.Range("B16:G16").Font.Bold = True
+    wsa.Range("B16:G16").Interior.Color = rgb(192,0,0)
+    wsa.Range("B16:G16").Font.Color = rgb(255,255,255)
 
-    wsa.Range("A44:J44").Merge()
-    write("A44","▌ כל הפריטים בחסר",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(197,90,17))
-    wsa.Range("B45:G45").Value = [["מזהה","שם פריט","מלאי","מינימום","קריטי",""]]
-    wsa.Range("B45:G45").Font.Bold = True
-    wsa.Range("B45:G45").Interior.Color = rgb(197,90,17)
-    wsa.Range("B45:G45").Font.Color = rgb(255,255,255)
+    wsa.Range("A24:J24").Merge()
+    write("A24","▌ כל הפריטים בחסר",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(197,90,17))
+    wsa.Range("B25:G25").Value = [["מזהה","שם פריט","מלאי","מינימום","קריטי",""]]
+    wsa.Range("B25:G25").Font.Bold = True
+    wsa.Range("B25:G25").Interior.Color = rgb(197,90,17)
+    wsa.Range("B25:G25").Font.Color = rgb(255,255,255)
 
-    wsa.Range("A78:J78").Merge()
-    write("A78","▌ תנועות אחרונות",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(68,114,196))
-    wsa.Range("B79:I79").Value = [["מזהה תנועה","תאריך","סוג","מזהה","שם פריט","כמות","טכנאי","סיבה"]]
-    wsa.Range("B79:I79").Font.Bold = True
-    wsa.Range("B79:I79").Interior.Color = rgb(68,114,196)
-    wsa.Range("B79:I79").Font.Color = rgb(255,255,255)
+    wsa.Range("A35:J35").Merge()
+    write("A35","▌ תנועות אחרונות",bold=True,size=12,fcolor=rgb(255,255,255),bg=rgb(68,114,196))
+    wsa.Range("B36:I36").Value = [["מזהה תנועה","תאריך","סוג","מזהה","שם פריט","כמות","טכנאי","סיבה"]]
+    wsa.Range("B36:I36").Font.Bold = True
+    wsa.Range("B36:I36").Interior.Color = rgb(68,114,196)
+    wsa.Range("B36:I36").Font.Color = rgb(255,255,255)
     print("  Dashboard ready")
 
 
@@ -1196,7 +1207,6 @@ def setup_vba(wb):
     add_module(vb, "modInventory",    VBA_INV)
     add_module(vb, "modDashboard",    VBA_DASH)
     add_module(vb, "modReports",      VBA_REPORTS)
-    add_module(vb, "modMigration",    VBA_MIGRATION)
     add_module(vb, "modMain",         VBA_MAIN)
 
     try:
@@ -1238,24 +1248,24 @@ def setup_vba(wb):
         ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,458,220,30,{}),
     ])
 
-    add_form(vb, "frmStockIn", "קבלת מלאי למחסן", 480, 450, CODE_FRMSTOCKIN, [
+    add_form(vb, "frmStockIn", "קבלת מלאי למחסן", 480, 520, CODE_FRMSTOCKIN, [
         ("Forms.Label.1",         "lbl1",     "חיפוש פריט:",              6,  6,100,16,{}),
         ("Forms.TextBox.1",       "txtSearch","",                           6, 24,280,20,{}),
-        ("Forms.ListBox.1",       "lstRes",   "",                           6, 50,460,110,{"cols":4,"colw":"160;100;50;80"}),
-        ("Forms.Label.1",         "lblSel",   "",                           6,168,460,16,{}),
-        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,188,200,16,{}),
-        ("Forms.Label.1",         "lbl2",     "כמות לקבלה:",               6,210,100,16,{}),
-        ("Forms.TextBox.1",       "txtQty",   "",                           6,228, 80,22,{}),
-        ("Forms.Label.1",         "lbl3",     "מחיר ליחידה ₪:",            6,258,120,16,{}),
-        ("Forms.TextBox.1",       "txtPrice", "",                           6,276,120,22,{}),
-        ("Forms.Label.1",         "lbl4",     "מספר הזמנת רכש (PO):",      6,306,160,16,{}),
-        ("Forms.TextBox.1",       "txtPO",    "",                           6,324,160,22,{}),
-        ("Forms.Label.1",         "lbl5",     "שם מקבל:",                  6,354,100,16,{}),
-        ("Forms.TextBox.1",       "txtTechnician","",                       6,372,200,22,{}),
-        ("Forms.Label.1",         "lbl6",     "הערה:",                     6,402,100,16,{}),
-        ("Forms.TextBox.1",       "txtReason","",                           6,420,460,20,{}),
-        ("Forms.CommandButton.1", "cmdSave",  "קלוט קבלה",                 6,448,220,30,{}),
-        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,448,220,30,{}),
+        ("Forms.ListBox.1",       "lstRes",   "",                           6, 50,460,120,{"cols":4,"colw":"160;100;50;80"}),
+        ("Forms.Label.1",         "lblSel",   "",                           6,178,460,16,{}),
+        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,198,200,16,{}),
+        ("Forms.Label.1",         "lbl2",     "כמות לקבלה:",               6,222,100,16,{}),
+        ("Forms.TextBox.1",       "txtQty",   "",                           6,240, 80,22,{}),
+        ("Forms.Label.1",         "lbl3",     "מחיר ליחידה ₪:",            6,270,120,16,{}),
+        ("Forms.TextBox.1",       "txtPrice", "",                           6,288,120,22,{}),
+        ("Forms.Label.1",         "lbl4",     "מספר הזמנת רכש (PO):",      6,318,160,16,{}),
+        ("Forms.TextBox.1",       "txtPO",    "",                           6,336,160,22,{}),
+        ("Forms.Label.1",         "lbl5",     "שם מקבל:",                  6,366,100,16,{}),
+        ("Forms.TextBox.1",       "txtTechnician","",                       6,384,200,22,{}),
+        ("Forms.Label.1",         "lbl6",     "הערה:",                     6,414,100,16,{}),
+        ("Forms.TextBox.1",       "txtReason","",                           6,432,460,20,{}),
+        ("Forms.CommandButton.1", "cmdSave",  "קלוט קבלה",                 6,464,220,32,{}),
+        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,464,220,32,{}),
     ])
 
     add_form(vb, "frmAddItem", "הוספת פריט חדש למאגר", 420, 540, CODE_FRMADDITEM, [
@@ -1281,7 +1291,7 @@ def setup_vba(wb):
         ("Forms.ComboBox.1",      "cboLoc",     "",                           6,262,185,22,{}),
         ("Forms.Label.1",         "lbl11",      "מינימום מלאי:",            205,244,120,16,{}),
         ("Forms.TextBox.1",       "txtMinQty",  "",                          205,262, 80,22,{}),
-        ("Forms.CheckBox.1",      "chkCritical","פריט קריטי",                6,294,150,20,{}),
+        ("Forms.CheckBox.1",      "chkCritical","פריט קריטי (שבר, משבית מערכת)",6,294,300,20,{}),
         ("Forms.Label.1",         "lbl12",      "הערות:",                    6,320,100,16,{}),
         ("Forms.TextBox.1",       "txtNotes",   "",                           6,338,395,50,{}),
         ("Forms.Label.1",         "lblPreview", "",                           6,396,395,16,{}),
