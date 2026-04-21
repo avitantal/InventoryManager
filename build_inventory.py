@@ -115,6 +115,18 @@ EH: TblRow = 0
 End Function
 Public Sub ShowErr(msg As String): MsgBox msg, vbCritical, "שגיאה": End Sub
 Public Sub ShowOK(msg As String):  MsgBox msg, vbInformation, "הצלחה": End Sub
+
+Public Sub ApplyRTLAlignment(frm As Object)
+    Dim ctl As Object
+    For Each ctl In frm.Controls
+        On Error Resume Next
+        Select Case TypeName(ctl)
+            Case "Label", "TextBox", "ComboBox"
+                ctl.TextAlign = 3
+        End Select
+        On Error GoTo 0
+    Next ctl
+End Sub
 """
 
 VBA_ITEMS = """\
@@ -597,6 +609,7 @@ Option Explicit
 Private Sub UserForm_Initialize()
     Me.Width=310: Me.Height=385
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
 End Sub
 Private Sub cmdAddItem_Click():  Me.Hide: frmAddItem.Show:  Me.Show: End Sub
 Private Sub cmdStockIn_Click():  Me.Hide: frmStockIn.Show:  Me.Show: End Sub
@@ -613,8 +626,9 @@ Option Explicit
 Dim selID As String, curQ As Long, minQ As Long, isCrit As Boolean
 
 Private Sub UserForm_Initialize()
-    Me.Width=492: Me.Height=520
+    Me.Width=492: Me.Height=500
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
     txtTechnician.Value = Environ("USERNAME")
     lblWarn.Visible = False: lblCrit.Visible = False
     selID = "": curQ = 0: minQ = 0: isCrit = False
@@ -698,8 +712,9 @@ Option Explicit
 Dim selID As String
 
 Private Sub UserForm_Initialize()
-    Me.Width=492: Me.Height=535
+    Me.Width=492: Me.Height=485
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
     txtTechnician.Value = Environ("USERNAME")
     selID = ""
 End Sub
@@ -754,8 +769,9 @@ CODE_FRMADDITEM = """\
 Option Explicit
 
 Private Sub UserForm_Initialize()
-    Me.Width=432: Me.Height=556
+    Me.Width=432: Me.Height=510
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
     Dim lo As ListObject
     Dim i As Long
     Set lo = ThisWorkbook.Sheets("Lists").ListObjects("tbl_Categories")
@@ -815,8 +831,9 @@ Option Explicit
 Dim selID As String
 
 Private Sub UserForm_Initialize()
-    Me.Width=402: Me.Height=326
+    Me.Width=402: Me.Height=310
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
     txtTechnician.Value = Environ("USERNAME")
     selID = ""
 End Sub
@@ -853,8 +870,9 @@ CODE_FRMSEARCH = """\
 Option Explicit
 
 Private Sub UserForm_Initialize()
-    Me.Width=652: Me.Height=498
+    Me.Width=652: Me.Height=478
     On Error Resume Next: Me.RightToLeft = True: On Error GoTo 0
+    ApplyRTLAlignment Me
 End Sub
 Private Sub cmdSearch_Click()
     lstRes.Clear
@@ -1230,42 +1248,51 @@ def setup_vba(wb):
     add_form(vb, "frmStockOut", "הוצאת פריט מהמלאי", 480, 500, CODE_FRMSTOCKOUT, [
         ("Forms.Label.1",         "lbl1",     "חיפוש פריט:",              6,  6,100,16,{}),
         ("Forms.TextBox.1",       "txtSearch","",                           6, 24,280,20,{}),
-        ("Forms.ListBox.1",       "lstRes",   "",                           6, 50,460,120,{"cols":5,"colw":"80;160;80;50;80"}),
-        ("Forms.Label.1",         "lblSel",   "",                           6,178,460,16,{}),
-        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,198,200,16,{}),
-        ("Forms.Label.1",         "lblMinQ",  "מינימום: -",               220,198,200,16,{}),
-        ("Forms.Label.1",         "lbl2",     "כמות להוצאה:",              6,220,100,16,{}),
-        ("Forms.TextBox.1",       "txtQty",   "",                           6,238, 80,22,{}),
-        ("Forms.Label.1",         "lbl3",     "הוראת עבודה:",              6,268,130,16,{}),
-        ("Forms.TextBox.1",       "txtWO",    "",                           6,286,200,22,{}),
-        ("Forms.Label.1",         "lbl4",     "שם מבצע:",                  6,316,100,16,{}),
-        ("Forms.TextBox.1",       "txtTechnician","",                       6,334,200,22,{}),
-        ("Forms.Label.1",         "lbl5",     "הערה / סיבה:",              6,364,100,16,{}),
-        ("Forms.TextBox.1",       "txtReason","",                           6,382,460,22,{}),
-        ("Forms.Label.1",         "lblWarn",  "",                           6,412,460,16,{}),
-        ("Forms.Label.1",         "lblCrit",  "",                           6,432,460,16,{}),
-        ("Forms.CommandButton.1", "cmdSave",  "אשר הוצאה",                 6,458,220,30,{}),
-        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,458,220,30,{}),
+        ("Forms.Label.1",         "hdr1",     "שם פריט",                   6, 46, 80,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr2",     "יצרן",                     86, 46,160,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr3",     "דגם",                     246, 46, 80,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr4",     "מלאי",                    326, 46, 50,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr5",     "מזהה",                    376, 46, 80,14,{"bold":True,"fsize":9}),
+        ("Forms.ListBox.1",       "lstRes",   "",                           6, 62,460, 98,{"cols":5,"colw":"80;160;80;50;80"}),
+        ("Forms.Label.1",         "lblSel",   "",                           6,166,460,16,{}),
+        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,186,200,16,{}),
+        ("Forms.Label.1",         "lblMinQ",  "מינימום: -",               220,186,200,16,{}),
+        ("Forms.Label.1",         "lbl2",     "כמות להוצאה:",              6,206,100,16,{}),
+        ("Forms.TextBox.1",       "txtQty",   "",                           6,224, 80,22,{}),
+        ("Forms.Label.1",         "lbl3",     "הוראת עבודה:",              6,250,130,16,{}),
+        ("Forms.TextBox.1",       "txtWO",    "",                           6,268,200,22,{}),
+        ("Forms.Label.1",         "lbl4",     "שם מבצע:",                  6,294,100,16,{}),
+        ("Forms.TextBox.1",       "txtTechnician","",                       6,312,200,22,{}),
+        ("Forms.Label.1",         "lbl5",     "הערה / סיבה:",              6,338,100,16,{}),
+        ("Forms.TextBox.1",       "txtReason","",                           6,356,460,22,{}),
+        ("Forms.Label.1",         "lblWarn",  "",                           6,382,460,16,{}),
+        ("Forms.Label.1",         "lblCrit",  "",                           6,400,460,16,{}),
+        ("Forms.CommandButton.1", "cmdSave",  "אשר הוצאה",                 6,424,220,28,{}),
+        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,424,220,28,{}),
     ])
 
-    add_form(vb, "frmStockIn", "קבלת מלאי למחסן", 480, 520, CODE_FRMSTOCKIN, [
+    add_form(vb, "frmStockIn", "קבלת מלאי למחסן", 480, 485, CODE_FRMSTOCKIN, [
         ("Forms.Label.1",         "lbl1",     "חיפוש פריט:",              6,  6,100,16,{}),
         ("Forms.TextBox.1",       "txtSearch","",                           6, 24,280,20,{}),
-        ("Forms.ListBox.1",       "lstRes",   "",                           6, 50,460,120,{"cols":4,"colw":"160;100;50;80"}),
-        ("Forms.Label.1",         "lblSel",   "",                           6,178,460,16,{}),
-        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,198,200,16,{}),
-        ("Forms.Label.1",         "lbl2",     "כמות לקבלה:",               6,222,100,16,{}),
-        ("Forms.TextBox.1",       "txtQty",   "",                           6,240, 80,22,{}),
-        ("Forms.Label.1",         "lbl3",     "מחיר ליחידה ₪:",            6,270,120,16,{}),
-        ("Forms.TextBox.1",       "txtPrice", "",                           6,288,120,22,{}),
-        ("Forms.Label.1",         "lbl4",     "מספר הזמנת רכש (PO):",      6,318,160,16,{}),
-        ("Forms.TextBox.1",       "txtPO",    "",                           6,336,160,22,{}),
-        ("Forms.Label.1",         "lbl5",     "שם מקבל:",                  6,366,100,16,{}),
-        ("Forms.TextBox.1",       "txtTechnician","",                       6,384,200,22,{}),
-        ("Forms.Label.1",         "lbl6",     "הערה:",                     6,414,100,16,{}),
-        ("Forms.TextBox.1",       "txtReason","",                           6,432,460,20,{}),
-        ("Forms.CommandButton.1", "cmdSave",  "קלוט קבלה",                 6,464,220,32,{}),
-        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,464,220,32,{}),
+        ("Forms.Label.1",         "hdr1",     "שם פריט",                   6, 46,160,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr2",     "יצרן",                    166, 46,100,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr3",     "מלאי",                    266, 46, 50,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr4",     "מזהה",                    316, 46, 80,14,{"bold":True,"fsize":9}),
+        ("Forms.ListBox.1",       "lstRes",   "",                           6, 62,460, 88,{"cols":4,"colw":"160;100;50;80"}),
+        ("Forms.Label.1",         "lblSel",   "",                           6,156,460,16,{}),
+        ("Forms.Label.1",         "lblCurQ",  "מלאי נוכחי: -",             6,176,200,16,{}),
+        ("Forms.Label.1",         "lbl2",     "כמות לקבלה:",               6,198,100,16,{}),
+        ("Forms.TextBox.1",       "txtQty",   "",                           6,216, 80,22,{}),
+        ("Forms.Label.1",         "lbl3",     "מחיר ליחידה ₪:",            6,242,120,16,{}),
+        ("Forms.TextBox.1",       "txtPrice", "",                           6,260,120,22,{}),
+        ("Forms.Label.1",         "lbl4",     "מספר הזמנת רכש (PO):",      6,286,160,16,{}),
+        ("Forms.TextBox.1",       "txtPO",    "",                           6,304,160,22,{}),
+        ("Forms.Label.1",         "lbl5",     "שם מקבל:",                  6,330,100,16,{}),
+        ("Forms.TextBox.1",       "txtTechnician","",                       6,348,200,22,{}),
+        ("Forms.Label.1",         "lbl6",     "הערה:",                     6,374,100,16,{}),
+        ("Forms.TextBox.1",       "txtReason","",                           6,392,460,20,{}),
+        ("Forms.CommandButton.1", "cmdSave",  "קלוט קבלה",                 6,418,220,28,{}),
+        ("Forms.CommandButton.1", "cmdCancel","ביטול",                    246,418,220,28,{}),
     ])
 
     add_form(vb, "frmAddItem", "הוספת פריט חדש למאגר", 420, 540, CODE_FRMADDITEM, [
@@ -1315,29 +1342,35 @@ def setup_vba(wb):
         ("Forms.CommandButton.1", "cmdCancel",  "ביטול",                    200,248,175,30,{}),
     ])
 
-    add_form(vb, "frmSearch", "חיפוש פריטים", 640, 480, CODE_FRMSEARCH, [
+    add_form(vb, "frmSearch", "חיפוש פריטים", 640, 478, CODE_FRMSEARCH, [
         ("Forms.Label.1",         "lbl1",      "חפש:",                       6,  6, 40,16,{}),
         ("Forms.TextBox.1",       "txtSearch", "",                            6, 24,380,22,{}),
         ("Forms.CommandButton.1", "cmdSearch", "חפש",                       396, 22, 60,26,{}),
-        ("Forms.ListBox.1",       "lstRes",    "",                            6, 56,620,190,{"cols":6,"colw":"70;180;90;80;50;50"}),
-        ("Forms.Label.1",         "lblCount",  "נמצאו 0 פריטים",            6,254,200,16,{}),
-        ("Forms.Label.1",         "lbl2",      "מזהה:",                      6,278, 60,16,{}),
-        ("Forms.Label.1",         "lblDID",    "",                           70,278,120,16,{}),
-        ("Forms.Label.1",         "lbl3",      "שם פריט:",                   6,298, 70,16,{}),
-        ("Forms.Label.1",         "lblDName",  "",                           70,298,300,16,{}),
-        ("Forms.Label.1",         "lbl4",      "יצרן:",                      6,318, 60,16,{}),
-        ("Forms.Label.1",         "lblDMfg",   "",                           70,318,200,16,{}),
-        ("Forms.Label.1",         "lbl5",      "דגם:",                       6,338, 60,16,{}),
-        ("Forms.Label.1",         "lblDModel", "",                           70,338,200,16,{}),
-        ("Forms.Label.1",         "lbl6",      "מלאי:",                      6,358, 60,16,{}),
-        ("Forms.Label.1",         "lblDQty",   "",                           70,358, 60,16,{}),
-        ("Forms.Label.1",         "lbl7",      "מיקום:",                     6,378, 60,16,{}),
-        ("Forms.Label.1",         "lblDLoc",   "",                           70,378,200,16,{}),
-        ("Forms.Label.1",         "lbl8",      "קריטי:",                     6,398, 60,16,{}),
-        ("Forms.Label.1",         "lblDCrit",  "",                           70,398, 60,16,{}),
-        ("Forms.CommandButton.1", "cmdStockOut","הוצא כמות",                 6,428,190,30,{}),
-        ("Forms.CommandButton.1", "cmdStockIn", "קלוט כמות",               210,428,190,30,{}),
-        ("Forms.CommandButton.1", "cmdClose",   "סגור",                    450,428,160,30,{}),
+        ("Forms.Label.1",         "hdr1",      "מזהה",                       6, 48, 70,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr2",      "שם פריט",                   76, 48,180,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr3",      "יצרן",                     256, 48, 90,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr4",      "דגם",                      346, 48, 80,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr5",      "מלאי",                     426, 48, 50,14,{"bold":True,"fsize":9}),
+        ("Forms.Label.1",         "hdr6",      "קריטי",                    476, 48, 50,14,{"bold":True,"fsize":9}),
+        ("Forms.ListBox.1",       "lstRes",    "",                            6, 64,620,170,{"cols":6,"colw":"70;180;90;80;50;50"}),
+        ("Forms.Label.1",         "lblCount",  "נמצאו 0 פריטים",            6,240,200,16,{}),
+        ("Forms.Label.1",         "lbl2",      "מזהה:",                      6,262, 60,16,{}),
+        ("Forms.Label.1",         "lblDID",    "",                           70,262,120,16,{}),
+        ("Forms.Label.1",         "lbl3",      "שם פריט:",                   6,282, 70,16,{}),
+        ("Forms.Label.1",         "lblDName",  "",                           70,282,300,16,{}),
+        ("Forms.Label.1",         "lbl4",      "יצרן:",                      6,302, 60,16,{}),
+        ("Forms.Label.1",         "lblDMfg",   "",                           70,302,200,16,{}),
+        ("Forms.Label.1",         "lbl5",      "דגם:",                       6,322, 60,16,{}),
+        ("Forms.Label.1",         "lblDModel", "",                           70,322,200,16,{}),
+        ("Forms.Label.1",         "lbl6",      "מלאי:",                      6,342, 60,16,{}),
+        ("Forms.Label.1",         "lblDQty",   "",                           70,342, 60,16,{}),
+        ("Forms.Label.1",         "lbl7",      "מיקום:",                     6,362, 60,16,{}),
+        ("Forms.Label.1",         "lblDLoc",   "",                           70,362,200,16,{}),
+        ("Forms.Label.1",         "lbl8",      "קריטי:",                     6,382, 60,16,{}),
+        ("Forms.Label.1",         "lblDCrit",  "",                           70,382, 60,16,{}),
+        ("Forms.CommandButton.1", "cmdStockOut","הוצא כמות",                 6,410,190,28,{}),
+        ("Forms.CommandButton.1", "cmdStockIn", "קלוט כמות",               210,410,190,28,{}),
+        ("Forms.CommandButton.1", "cmdClose",   "סגור",                    450,410,160,28,{}),
     ])
 
     print("  All VBA injected")
